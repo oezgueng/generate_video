@@ -177,16 +177,24 @@ def handler(job):
         logger.warning(f"LoRA 개수가 {len(lora_pairs)}개입니다. 최대 4개까지만 지원됩니다. 처음 4개만 사용합니다.")
         lora_pairs = lora_pairs[:4]
     
-    # 워크플로우 파일 선택 (end_image_*가 있으면 FLF2V 워크플로 사용)
-    workflow_file = "/new_Wan22_flf2v_api.json" if end_image_path_local else "/new_Wan22_api.json"
-    logger.info(f"Using {'FLF2V' if end_image_path_local else 'single'} workflow with {lora_count} LoRA pairs")
+    # 워크플로우 파일 선택 (end_image_*가 있으면 FLF2V, image_path가 있으면 I2V, sonst T2V)
+    if end_image_path_local:
+        workflow_file = "/new_Wan22_flf2v_api.json"
+        logger.info(f"Using FLF2V workflow with {lora_count} LoRA pairs")
+    elif image_path:
+        workflow_file = "/new_Wan22_api.json"
+        logger.info(f"Using I2V workflow with {lora_count} LoRA pairs")
+    else:
+        workflow_file = "/new_Wan22_t2v_api.json"
+        logger.info(f"Using T2V workflow with {lora_count} LoRA pairs")
     
     prompt = load_workflow(workflow_file)
     
     length = job_input.get("length", 81)
     steps = job_input.get("steps", 10)
 
-    if image_path:
+    # Set image only for I2V/FLF2V workflows (not for T2V)
+    if image_path and "244" in prompt:
         prompt["244"]["inputs"]["image"] = image_path
     prompt["541"]["inputs"]["num_frames"] = length
     prompt["135"]["inputs"]["positive_prompt"] = job_input["prompt"]
