@@ -158,10 +158,6 @@ def handler(job):
         image_path = process_input(job_input["image_url"], task_id, "input_image.jpg", "url")
     elif "image_base64" in job_input:
         image_path = process_input(job_input["image_base64"], task_id, "input_image.jpg", "base64")
-    else:
-        # 기본값 사용
-        image_path = "/example_image.png"
-        logger.info("기본 이미지 파일을 사용합니다: /example_image.png")
 
     # 엔드 이미지 입력 처리 (end_image_path, end_image_url, end_image_base64 중 하나만 사용)
     end_image_path_local = None
@@ -190,7 +186,8 @@ def handler(job):
     length = job_input.get("length", 81)
     steps = job_input.get("steps", 10)
 
-    prompt["244"]["inputs"]["image"] = image_path
+    if image_path:
+        prompt["244"]["inputs"]["image"] = image_path
     prompt["541"]["inputs"]["num_frames"] = length
     prompt["135"]["inputs"]["positive_prompt"] = job_input["prompt"]
     prompt["135"]["inputs"]["negative_prompt"] = job_input.get("negative_prompt", "bright tones, overexposed, static, blurred details, subtitles, style, works, paintings, images, static, overall gray, worst quality, low quality, JPEG compression residue, ugly, incomplete, extra fingers, poorly drawn hands, poorly drawn faces, deformed, disfigured, misshapen limbs, fused fingers, still picture, messy background, three legs, many people in the background, walking backwards")
