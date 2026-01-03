@@ -141,6 +141,15 @@ def get_videos(ws, prompt):
     return output_videos
 
 def load_workflow(workflow_path):
+    # Use absolute path if it starts with /, otherwise use relative to script directory
+    if not os.path.isabs(workflow_path):
+        script_dir = os.path.dirname(os.path.abspath(__file__))
+        workflow_path = os.path.join(script_dir, workflow_path)
+    elif not os.path.exists(workflow_path):
+        # If absolute path doesn't exist, try relative to script directory
+        script_dir = os.path.dirname(os.path.abspath(__file__))
+        workflow_name = os.path.basename(workflow_path)
+        workflow_path = os.path.join(script_dir, workflow_name)
     with open(workflow_path, 'r') as file:
         return json.load(file)
 
@@ -179,13 +188,13 @@ def handler(job):
     
     # 워크플로우 파일 선택 (end_image_*가 있으면 FLF2V, image_path가 있으면 I2V, sonst T2V)
     if end_image_path_local:
-        workflow_file = "/new_Wan22_flf2v_api.json"
+        workflow_file = "new_Wan22_flf2v_api.json"
         logger.info(f"Using FLF2V workflow with {lora_count} LoRA pairs")
     elif image_path:
-        workflow_file = "/new_Wan22_api.json"
+        workflow_file = "new_Wan22_api.json"
         logger.info(f"Using I2V workflow with {lora_count} LoRA pairs")
     else:
-        workflow_file = "/new_Wan22_t2v_api.json"
+        workflow_file = "new_Wan22_t2v_api.json"
         logger.info(f"Using T2V workflow with {lora_count} LoRA pairs")
     
     prompt = load_workflow(workflow_file)
@@ -283,7 +292,6 @@ def handler(job):
     # 웹소켓 연결 시도 (최대 3분)
     max_attempts = int(180/5)  # 3분 (1초에 한 번씩 시도)
     for attempt in range(max_attempts):
-        import time
         try:
             ws.connect(ws_url)
             logger.info(f"웹소켓 연결 성공 (시도 {attempt+1})")
